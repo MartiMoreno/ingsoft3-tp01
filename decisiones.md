@@ -52,3 +52,27 @@ Contra los criterios de la guía:
 ### Uso de IA
 
 Usé Claude como profesor/asistente técnico durante todo el TP: para explicar conceptos nuevos (contenedores, multi-stage builds, nginx como proxy, healthchecks), para generar el código base (Dockerfiles, docker-compose.yml, nginx.conf) que después revisé y entendí, y para diagnosticar errores reales (el de la tabla faltante, el de PowerShell, el del checkout roto). Verifiqué cada paso ejecutándolo yo misma y confirmando el resultado antes de avanzar al siguiente.
+
+## TP3 — Planificación y trazabilidad
+
+### Duración del sprint
+
+Elegí sprints de **1 semana**. Al ser un TP universitario con entregas y defensas frecuentes (no un proyecto real de varios meses), un sprint corto da feedback rápido y se alinea mejor con el calendario de cursada que un sprint de 2-4 semanas, que sería demasiado largo para el ritmo de esta materia.
+
+### Límite de trabajo en progreso (WIP)
+
+Configuré el límite en **2** para la columna "In Progress". La regla de arranque es "cantidad de personas + 1"; trabajando sola, eso da 1 + 1 = 2. El "+1" permite tener algo esperando (una revisión, por ejemplo) sin bloquear el avance en otra cosa, sin que el límite deje de cumplir su función de evitar acumular trabajo a medio terminar.
+
+### Diagnóstico de la historia mal escrita
+
+La historia de ejemplo (*"Como desarrollador quiero crear la tabla usuarios"*) está mal escrita porque es una **tarea disfrazada de historia**: describe un paso técnico interno (crear una tabla), no un incremento de valor observable para alguien. Nadie fuera del equipo de desarrollo "quiere" una tabla — el beneficio real estaría un nivel más arriba (por ejemplo, poder registrar usuarios en el sistema). Se reescribiría como: *"Como usuario quiero poder registrarme en el sistema para acceder a mis tareas"*, y "crear la tabla usuarios" pasaría a ser una de sus tareas técnicas, no la historia en sí.
+
+### Problemas encontrados y cómo los resolví
+
+1. **La tabla del Project apareció colapsada.** Al asignar el campo Sprint, solo se veían la épica y el bug como filas — la historia y las tareas estaban anidadas y ocultas bajo la épica. Se resolvió expandiendo la fila de la épica con la flecha desplegable, lo que reveló las sub-filas.
+
+2. **Se asignó por error el Sprint a la épica y al bug.** La consigna solo pide sprint para la historia y sus tareas. Se corrigió vaciando el campo Sprint en esos dos issues.
+
+### Uso de IA
+
+Usé Claude para interpretar la consigna del TP3 (jerarquía épica/historia/tarea, sprint, límite de WIP, trazabilidad), para guiarme paso a paso por la interfaz de GitHub Projects (que no había usado antes), y para redactar el contenido de los issues (épica, historia con criterios de aceptación, tareas, bug). Verifiqué cada paso ejecutándolo yo misma en GitHub y confirmando visualmente el resultado (jerarquía navegable, sprint asignado, PR cerrando la tarea) antes de avanzar.
