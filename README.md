@@ -60,3 +60,4 @@ Usa las imágenes públicas en ghcr.io en vez de construir desde el código loca
 - Backend: Node.js + Express + PostgreSQL (paquete `pg`)
 - Frontend: React (Vite) servido por nginx en producción
 - Base de datos: PostgreSQL 16
+
