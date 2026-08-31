@@ -76,3 +76,27 @@ La historia de ejemplo (*"Como desarrollador quiero crear la tabla usuarios"*) e
 ### Uso de IA
 
 Usé Claude para interpretar la consigna del TP3 (jerarquía épica/historia/tarea, sprint, límite de WIP, trazabilidad), para guiarme paso a paso por la interfaz de GitHub Projects (que no había usado antes), y para redactar el contenido de los issues (épica, historia con criterios de aceptación, tareas, bug). Verifiqué cada paso ejecutándolo yo misma en GitHub y confirmando visualmente el resultado (jerarquía navegable, sprint asignado, PR cerrando la tarea) antes de avanzar.
+
+## TP4 — CI: Pipelines as Code
+
+### Estructura del pipeline
+
+El workflow tiene dos jobs, `build-backend` y `build-frontend`, que corren en paralelo porque son completamente independientes entre sí (cada uno construye su propia imagen con su propio Dockerfile del TP2). Separarlos en dos jobs, en vez de uno solo secuencial, reduce el tiempo total de la corrida y aísla el fallo: si el backend rompe, se ve exactamente en qué job y no hace falta esperar a que termine el otro para saberlo.
+
+### Cache
+
+El pipeline cachea las capas de Docker de cada imagen (`cache-from`/`cache-to: type=gha`), con un `scope` distinto por job (`backend` y `frontend`) para que no se pisen entre sí. En la segunda corrida sobre el mismo PR, las cuatro capas del backend (`WORKDIR`, `COPY package*.json`, `RUN npm ci`, `COPY . .`) se reutilizaron completas (`CACHED` en el log), sin reconstruir nada. Si el cache desaparece (la plataforma no garantiza que persista), el pipeline sigue funcionando igual, solo que reconstruye todo desde cero — más lento, pero no roto.
+
+### Por qué el pipeline construye con el Dockerfile en vez de compilar por su cuenta
+
+El pipeline usa `docker build` sobre los mismos Dockerfiles del TP2, en vez de correr `npm install`/`npm run build` directamente en el runner. Esto evita tener dos definiciones distintas de cómo se construye la app (una para CI, otra para producción) que con el tiempo podrían divergir — lo que el pipeline verifica es exactamente lo mismo que después se despliega, no una aproximación.
+
+### Problemas encontrados y cómo los resolví
+
+1. **Al principio no distinguía las distintas corridas históricas del workflow en la pestaña Actions** (una por cada PR anterior, incluyendo el `ci.yml` esqueleto del TP3). Se resolvió identificando la corrida correcta por su mensaje de commit y el número de PR asociado, en vez de mirar solo la lista general.
+
+2. **El primer intento de romper el build tuvo un error de sintaxis JSON** (faltó una coma al agregar la dependencia inexistente en `package.json`), lo que habría roto el build por un motivo distinto al buscado (JSON inválido, no dependencia inexistente). Se corrigió agregando la coma en el lugar correcto antes de confirmar que el fallo fuera el esperado (`npm ci` fallando por no encontrar el paquete).
+
+### Uso de IA
+
+Usé Claude para interpretar la consigna del TP4, para escribir el `ci.yml` completo (los dos jobs, el cache, el orden de los pasos), y para guiarme en la configuración del gate de protección de rama (status checks requeridos) y en la demostración del PR roto → bloqueado → arreglado → verde. Verifiqué cada paso mirando yo misma los resultados en GitHub (el log del cache con `CACHED`, el check rojo bloqueando el merge, el badge renderizado en el README) antes de avanzar al siguiente.
