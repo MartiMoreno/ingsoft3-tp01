@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 });
 
 // Listar todas las tareas
-app.get('/tareas', async (req, res) => {
+app.get('/api/tareas', async (req, res) => {
     try {
         const resultado = await pool.query('SELECT * FROM tareas ORDER BY id');
         res.json(resultado.rows);
@@ -24,7 +24,7 @@ app.get('/tareas', async (req, res) => {
 });
 
 // Crear una tarea
-app.post('/tareas', async (req, res) => {
+app.post('/api/tareas', async (req, res) => {
     const { titulo, descripcion, fecha_limite, prioridad } = req.body;
     try {
         const resultado = await pool.query(
