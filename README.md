@@ -1,4 +1,5 @@
 # Gestor de Tareas - IngSoft3
+[![CI](https://github.com/MartiMoreno/ingsoft3-tp01/actions/workflows/ci.yml/badge.svg)](https://github.com/MartiMoreno/ingsoft3-tp01/actions/workflows/ci.yml)
 
 Aplicación de gestión de tareas: backend en Node.js/Express, frontend en React, base de datos PostgreSQL. Contenerizada con Docker.
 
