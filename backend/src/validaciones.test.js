@@ -102,6 +102,13 @@ describe('validarFechaLimite', () => {
 
         expect(resultado.valido).toBe(false);
     });
+
+    it('rechaza una fecha límite que no es texto', () => {
+        const resultado = validarFechaLimite(20261020);
+
+        expect(resultado.valido).toBe(false);
+        expect(resultado.error).toBeTruthy();
+    });
 });
 
 describe('validarId', () => {
