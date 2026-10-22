@@ -1,7 +1,13 @@
 import { Routes, Route, Link, useNavigate, useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-
-const API_URL = '/api';
+import {
+  filtrarTareas,
+  textoVencimiento,
+  listarTareas,
+  crearTarea,
+  actualizarTarea,
+  borrarTarea,
+} from './lib/tareas';
 
 const coloresPrioridad = { BAJA: '#dcfce7', MEDIA: '#dbeafe', ALTA: '#fee2e2' };
 const textoPrioridad = { BAJA: '#166534', MEDIA: '#1e40af', ALTA: '#991b1b' };
@@ -37,16 +43,16 @@ function ListaTareas() {
   const [filtroPrioridad, setFiltroPrioridad] = useState('');
 
   const cargar = async () => {
-    const r = await fetch(`${API_URL}/tareas`);
-    setTareas(await r.json());
+    try {
+      setTareas(await listarTareas());
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => { cargar(); }, []);
 
-  const filtradas = tareas.filter(t =>
-    (!filtroEstado || t.estado === filtroEstado) &&
-    (!filtroPrioridad || t.prioridad === filtroPrioridad)
-  );
+  const filtradas = filtrarTareas(tareas, { estado: filtroEstado, prioridad: filtroPrioridad });
 
   return (
     <div>
@@ -80,7 +86,7 @@ function ListaTareas() {
               <div>
                 <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>{t.titulo}</p>
                 <p style={{ margin: 0, fontSize: 12, color: '#6b7280' }}>
-                  {t.fecha_limite ? `Vence ${new Date(t.fecha_limite).toLocaleDateString('es-AR')}` : 'Sin fecha'}
+                  {textoVencimiento(t.fecha_limite)}
                 </p>
               </div>
               <div style={{ display: 'flex', gap: 6 }}>
@@ -105,15 +111,17 @@ function NuevaTarea() {
   const [descripcion, setDescripcion] = useState('');
   const [fechaLimite, setFechaLimite] = useState('');
   const [prioridad, setPrioridad] = useState('MEDIA');
+  const [error, setError] = useState('');
 
   const crear = async (e) => {
     e.preventDefault();
-    await fetch(`${API_URL}/tareas`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ titulo, descripcion, fecha_limite: fechaLimite, prioridad }),
-    });
-    navigate('/');
+    setError('');
+    try {
+      await crearTarea({ titulo, descripcion, fecha_limite: fechaLimite, prioridad });
+      navigate('/');
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   return (
@@ -142,6 +150,7 @@ function NuevaTarea() {
             </select>
           </div>
         </div>
+        {error && <p style={{ margin: 0, fontSize: 12, color: '#dc2626' }}>{error}</p>}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
           <Link to="/" style={{ fontSize: 13, padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: 8, textDecoration: 'none', color: '#374151' }}>Cancelar</Link>
           <button type="submit" style={{ fontSize: 13, padding: '8px 16px', background: '#111827', color: 'white', border: 'none', borderRadius: 8 }}>Crear tarea</button>
@@ -157,9 +166,12 @@ function DetalleTarea() {
   const [tarea, setTarea] = useState(null);
 
   const cargar = async () => {
-    const r = await fetch(`${API_URL}/tareas`);
-    const todas = await r.json();
-    setTarea(todas.find(t => String(t.id) === id));
+    try {
+      const todas = await listarTareas();
+      setTarea(todas.find(t => String(t.id) === id));
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   useEffect(() => { cargar(); }, [id]);
@@ -167,17 +179,21 @@ function DetalleTarea() {
   if (!tarea) return <p>Cargando...</p>;
 
   const guardar = async () => {
-    await fetch(`${API_URL}/tareas/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tarea),
-    });
-    navigate('/');
+    try {
+      await actualizarTarea(id, tarea);
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const eliminar = async () => {
-    await fetch(`${API_URL}/tareas/${id}`, { method: 'DELETE' });
-    navigate('/');
+    try {
+      await borrarTarea(id);
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (
@@ -198,7 +214,8 @@ function DetalleTarea() {
             <tr>
               <td style={{ color: '#6b7280', padding: '4px 0' }}>Vence</td>
               <td style={{ textAlign: 'right', padding: '4px 0' }}>
-                {tarea.fecha_limite ? new Date(tarea.fecha_limite).toLocaleDateString('es-AR') : 'Sin fecha'}
+                {/* La etiqueta de la fila ya dice "Vence": se muestra solo la fecha */}
+                {textoVencimiento(tarea.fecha_limite).replace(/^Vence /, '')}
               </td>
             </tr>
             <tr>
