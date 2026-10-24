@@ -6,12 +6,18 @@
     "type": "commonjs",
     "scripts": {
         "start": "node index.js",
-        "dev": "node index.js"
+        "dev": "node index.js",
+        "test": "vitest",
+        "test:ci": "vitest run --coverage --coverage.reportsDirectory=${COVERAGE_DIR:-coverage}"
     },
     "dependencies": {
         "cors": "^2.8.6",
         "dotenv": "^16.4.5",
         "express": "^4.19.2",
         "pg": "^8.11.5"
+    },
+    "devDependencies": {
+        "@vitest/coverage-v8": "^5.0.5",
+        "vitest": "^5.0.5"
     }
 }
