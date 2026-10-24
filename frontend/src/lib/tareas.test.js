@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { filtrarTareas, textoVencimiento, listarTareas, crearTarea, borrarTarea } from './tareas';
+import { filtrarTareas, textoVencimiento, listarTareas, crearTarea, borrarTarea, estadoVencimiento } from './tareas';
 
 // Respuesta falsa con la forma mínima de la de fetch
 function respuesta(ok, cuerpo) {
@@ -84,5 +84,49 @@ describe('API de tareas', () => {
     await borrarTarea(7, traer);
 
     expect(traer).toHaveBeenCalledWith('/api/tareas/7', { method: 'DELETE' });
+  });
+});
+
+describe('estadoVencimiento', () => {
+  const hoy = '2026-10-24';
+
+  it('indica que no tiene fecha cuando la tarea no tiene fecha límite', () => {
+    const tarea = { estado: 'PENDIENTE', fecha_limite: null };
+
+    const estado = estadoVencimiento(tarea, hoy);
+
+    expect(estado).toBe('sin-fecha');
+  });
+
+  it('considera completada una tarea terminada aunque su fecha ya haya pasado', () => {
+    const tarea = { estado: 'COMPLETADA', fecha_limite: '2026-10-01' };
+
+    const estado = estadoVencimiento(tarea, hoy);
+
+    expect(estado).toBe('completada');
+  });
+
+  it('marca como vencida una tarea cuya fecha límite es anterior a hoy', () => {
+    const tarea = { estado: 'PENDIENTE', fecha_limite: '2026-10-01T00:00:00.000Z' };
+
+    const estado = estadoVencimiento(tarea, hoy);
+
+    expect(estado).toBe('vencida');
+  });
+
+  it('avisa que vence hoy cuando la fecha límite es la de hoy', () => {
+    const tarea = { estado: 'EN_PROGRESO', fecha_limite: '2026-10-24' };
+
+    const estado = estadoVencimiento(tarea, hoy);
+
+    expect(estado).toBe('vence-hoy');
+  });
+
+  it('considera a tiempo una tarea cuya fecha límite es posterior a hoy', () => {
+    const tarea = { estado: 'PENDIENTE', fecha_limite: '2026-11-15' };
+
+    const estado = estadoVencimiento(tarea, hoy);
+
+    expect(estado).toBe('a-tiempo');
   });
 });
