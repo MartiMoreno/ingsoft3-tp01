@@ -16,6 +16,7 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/lib/**'],
       reporter: ['text', 'html', 'lcov', 'json-summary'],
+      thresholds: { lines: 80, branches: 80 },
     },
   },
 })
