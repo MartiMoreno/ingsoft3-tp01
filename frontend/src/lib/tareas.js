@@ -54,3 +54,14 @@ export async function actualizarTarea(id, datos, traer = fetch) {
 export async function borrarTarea(id, traer = fetch) {
   await verificar(await traer(`${API_URL}/tareas/${id}`, { method: 'DELETE' }));
 }
+
+// Estado del vencimiento de una tarea respecto de "hoy" (YYYY-MM-DD).
+// "hoy" entra por parámetro para que el resultado no dependa del reloj.
+export function estadoVencimiento(tarea, hoy) {
+  if (!tarea || !tarea.fecha_limite) return 'sin-fecha';
+  if (tarea.estado === 'COMPLETADA') return 'completada';
+  const fecha = tarea.fecha_limite.slice(0, 10);
+  if (fecha < hoy) return 'vencida';
+  if (fecha === hoy) return 'vence-hoy';
+  return 'a-tiempo';
+}
