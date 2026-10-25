@@ -27,6 +27,9 @@ Esto levanta tres servicios: `db` (PostgreSQL), `backend` (API en Node/Express) 
 
 
 ### 3. Crear la tabla (solo la primera vez, con un volumen nuevo)
+
+> Desde el TP6 este paso ya no hace falta: el backend crea la tabla solo al arrancar si no existe (`CREATE TABLE IF NOT EXISTS`). Se deja como referencia del esquema.
+
 ```
 docker compose exec db psql -U postgres -d tareas
 ```
