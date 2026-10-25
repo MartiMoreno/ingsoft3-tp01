@@ -25,6 +25,11 @@ app.get('/', (req, res) => {
     res.json({ mensaje: 'API del Gestor de Tareas funcionando' });
 });
 
+// Chequeo de vida para Render: no toca la base
+app.get('/health', (req, res) => {
+    res.json({ estado: 'ok' });
+});
+
 // Listar todas las tareas
 app.get('/api/tareas', async (req, res) => {
     try {
@@ -64,6 +69,14 @@ app.delete('/api/tareas/:id', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
-});
+// Primero se asegura la tabla; si la base no responde, no tiene sentido arrancar
+pool.asegurarEsquema()
+    .then(() => {
+        app.listen(PORT, () => {
+            console.log(`Servidor corriendo en el puerto ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('No se pudo preparar la base de datos:', error);
+        process.exit(1);
+    });
