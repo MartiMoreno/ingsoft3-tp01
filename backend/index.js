@@ -71,9 +71,6 @@ app.delete('/api/tareas/:id', async (req, res) => {
     }
 });
 
-// TEMPORAL TP9: se saca antes de v9.0.0
-app.get('/api/falla', () => { throw new Error('Falla de prueba del TP9'); });
-
 // Manda a Sentry los errores que llegan sin manejar al final de las rutas
 Sentry.setupExpressErrorHandler(app);
 
