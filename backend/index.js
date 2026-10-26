@@ -1,5 +1,7 @@
+require('./instrument');
 const express = require('express');
 const cors = require('cors');
+const Sentry = require('@sentry/node');
 const pool = require('./db');
 const { crearRepositorioTareas } = require('./src/tareasRepo');
 const { crearServicioTareas, ErrorValidacion } = require('./src/tareasServicio');
@@ -68,6 +70,12 @@ app.delete('/api/tareas/:id', async (req, res) => {
         responderError(res, error, 'Error al borrar la tarea');
     }
 });
+
+// TEMPORAL TP9: se saca antes de v9.0.0
+app.get('/api/falla', () => { throw new Error('Falla de prueba del TP9'); });
+
+// Manda a Sentry los errores que llegan sin manejar al final de las rutas
+Sentry.setupExpressErrorHandler(app);
 
 // Primero se asegura la tabla; si la base no responde, no tiene sentido arrancar
 pool.asegurarEsquema()
