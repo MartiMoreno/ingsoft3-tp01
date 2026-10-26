@@ -117,7 +117,7 @@ function NuevaTarea() {
     e.preventDefault();
     setError('');
     try {
-      await crearTarea({ title: titulo, descripcion, fecha_limite: fechaLimite, prioridad });
+      await crearTarea({ titulo, descripcion, fecha_limite: fechaLimite, prioridad });
       navigate('/');
     } catch (err) {
       setError(err.message);
