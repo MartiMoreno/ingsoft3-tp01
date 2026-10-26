@@ -57,7 +57,7 @@ function ListaTareas() {
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-        <h1 style={{ fontSize: 20, margin: 0 }}>Mis tareas</h1>
+        <h1 style={{ fontSize: 20, margin: 0 }}>Mis tareas (versión nueva)</h1>
         <Link to="/nueva" style={{ fontSize: 13, padding: '8px 14px', background: '#111827', color: 'white', borderRadius: 8, textDecoration: 'none' }}>
           + Nueva tarea
         </Link>
