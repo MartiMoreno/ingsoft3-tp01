@@ -445,3 +445,35 @@ Hice el ciclo `apply` → `destroy` → `apply` → `destroy`: preprod respondi�
 ### Uso de IA
 
 Usé Claude (chat) para entender la consigna y adaptarla a mi app (la conexión como URI para `DATABASE_URL`, el puerto 3001, la región) y para diagnosticar los errores de `org_id` y de owner id. Claude Code escribió los archivos de `infra/` y esta sección. Las llaves, los `init`, `plan`, `apply` y `destroy`, y las comprobaciones en las consolas de Neon y Render las hice yo. Lo verifiqué leyendo cada plan antes de aplicarlo (qué se crea, qué queda `known after apply`, la última línea), con los `curl` a preprod, con el segundo `plan` en «No changes» y mirando el orden del destroy.
+
+## TP9 — DevSecOps, observabilidad y feedback
+
+### Protecciones activas
+
+En *Settings → Advanced Security* están prendidas las alertas y las actualizaciones de seguridad de Dependabot; la protección de secretos y la push protection ya venían activas (repo público); CodeQL corre con la configuración por defecto en cada PR y push. `.github/dependabot.yml` vigila tres ecosistemas, semanal: npm del backend, npm del frontend y las GitHub Actions del pipeline.
+
+### El PR de Dependabot que mergeé
+
+Mergeé el **#48**: `pg` de **8.23.0 a 8.23.1** en el backend, el driver con el que la api habla con PostgreSQL. Es un **patch** en SemVer; el changelog de `pg` no anota estas versiones y los commits son todos arreglos internos (ningún breaking change). Dos me hicieron mirar mi app: la validación del certificado al conectar por IP (me conecto a Neon por nombre de host) y la advertencia por fechas inválidas (mis validaciones las rechazan antes de llegar a la base). Me animé porque el PR sólo toca `package.json` y `package-lock.json` del backend, y porque en el PR pasaron los tests unitarios con su umbral de cobertura; después del merge, la integración contra la api de QA (con base real) y el e2e en el navegador también quedaron en verde, y recién ahí lo aprobé a PROD: si alguno fallaba, la versión nueva no llegaba a producción. No mergeé los **major** (express 4→5, dotenv 16→18, las actions): ésos necesitan leer sus breaking changes con tiempo.
+
+### Monitor y Sentry
+
+UptimeRobot mira el `/health` de la api de PROD cada 5 minutos. Suspendí el servicio en Render a las **14:51**; el mail **DOWN** llegó a las **14:57** (6 minutos para enterarme). Lo reanudé a las ~14:58, abrí `/health` para despertarlo y el **UP** llegó a las **15:02**: once minutos de caída en total. Sin el monitor me habría enterado cuando un usuario se quejara. Al terminar lo pausé, para no gastar las horas gratis de Render.
+
+En Sentry (proyectos `node-express` para la api y `tareas-front`), después de usar la app de PROD unos minutos:
+- **la más usada**: `GET /api/tareas` (P50 ≈ 8 ms): el front la llama cada vez que carga o cambia la lista;
+- **la más lenta**: `POST /api/tareas`, P95 ≈ 151 ms (P50 ≈ 96 ms), porque escribe en la base; vista desde el navegador llega a ≈ 418 ms por la red hasta Render;
+- **el error**: «Falla de prueba del TP9», desde una ruta temporal `/api/falla` que ya saqué.
+
+Con el dato de la operación más lenta abrí una tarjeta en el tablero del TP3 (*IngSoft3 - Gestor de Tareas DevOps*, columna Todo).
+
+### Problemas encontrados y cómo los resolví
+
+1. **Las instrucciones de Sentry eran para ESM** (`import`, `"type": "module"`, `node --import`) y mi backend es CommonJS: lo inicialicé con `require('./instrument')` como primera línea de `index.js`. El DSN del back entra por `SENTRY_DSN`, sólo en PROD; sin la variable la librería queda apagada (tests, QA). El del front va en el código porque sólo sirve para enviar datos.
+2. **Sentry no ve todos los errores:** los 500 que mis rutas atrapan con `responderError` no le llegan; sólo los que nadie atrapa, como el de `/api/falla`.
+3. **La ruta de prueba mostraba el stack trace en el navegador**, porque en Render no está `NODE_ENV=production` (exposición de información). Como la ruta se sacó, quedó anotado: en un proyecto real definiría esa variable.
+4. En Windows, `test:ci` no expande `${COVERAGE_DIR:-coverage}`; los tests locales los corrí con el bash de Git, igual que en el contenedor del CI.
+
+### Uso de IA
+
+Usé Claude (chat) para leer la consigna, elegir qué PR de Dependabot mergear (y cuáles no), guiarme por las pantallas de GitHub, Sentry, UptimeRobot y Render, e interpretar la tabla de Sentry. Claude Code escribió el `dependabot.yml`, la instrumentación de Sentry en back y front, la ruta de prueba y su borrado, y esta sección. Lo verifiqué yo: los tests y la cobertura en verde, el pipeline completo en cada PR, el error y las demoras llegando a Sentry desde PROD, los dos mails del monitor con su hora, y cada protección prendida en *Settings → Advanced Security*.
