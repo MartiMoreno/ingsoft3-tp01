@@ -424,3 +424,24 @@ La dirección del backend no está dentro de la imagen: la plantilla de nginx de
 ### Uso de IA
 
 Usé Claude (chat) para entender la consigna y adaptarla a mi app (Node/Express, puerto 3001, mis pantallas y endpoints) y para armar los prompts. Usé Claude Code para escribir el cambio de los deploys a `imgURL`, los jobs `integracion` y `e2e`, los dos specs, la configuración de Playwright, los labels del front, la rotura a propósito y su arreglo; también me ayudó a redactar esta sección. Los cambios de fuente en Render, las ramas, los commits, los PRs y las aprobaciones los hice yo. Lo verifiqué así: probé el deploy de una imagen a mano en un servicio antes de cambiar el pipeline; miré en Events de Render que cada deploy nombrara la imagen `sha-` de su corrida; corrí las dos suites local contra Docker Compose antes de subirlas; leí los logs (3 passed en cada suite) y diagnostiqué la rotura con el reporte de la e2e. Cada test verifica lo que dice su nombre contra QA desplegado; si uno falla, la cadena se corta y PROD no pide aprobación.
+
+## TP8 — Infraestructura como código
+
+### Riel y versiones
+
+Riel Terraform + Neon + Render, el de la materia. Terraform 1.16.6, con los providers fijados en `infra/main.tf`: `kislerdm/neon` **0.18.0** y `render-oss/render` **1.9.1** (el `.terraform.lock.hcl`, que se commitea, fija además sus hashes). `infra/` declara un entorno nuevo, `preprod`: un proyecto de Neon propio (`ingsoft3-tp01-preprod`, con su rol y su base `app_preprod`) y dos servicios de Render (`marti-tareas-api-preprod` y `marti-tareas-front-preprod`) que corren la imagen de `v7.0.0`. QA y producción no se tocan: no están declarados, y por eso ningún `plan` los ve.
+
+Ninguna credencial está en el HCL: los providers leen `NEON_API_KEY`, `RENDER_API_KEY` y `RENDER_OWNER_ID` del entorno, y el id de la organización de Neon entra por `TF_VAR_neon_org_id`. La cadena de conexión de la api se arma en un `local` con el host, el rol, la contraseña y la base que devuelve Neon, y la `BACKEND_URL` del front sale de la `url` de la api de preprod (sin barra final): las dos cosas que en el TP6 se copiaban a mano ahora se derivan. El estado (`terraform.tfstate`) vive en mi máquina y está en el `.gitignore` desde antes del primer apply, porque adentro tiene la contraseña del rol en texto plano.
+
+### Problemas encontrados y cómo los resolví
+
+1. **`terraform` no se reconocía después de instalarlo con winget:** la terminal no tenía el PATH actualizado. Lo recargué en la sesión.
+2. **Neon pidió `org_id` para crear el proyecto** (`org_id is required`): las cuentas de Neon ahora funcionan por organización y la guía se midió antes de ese cambio. Agregué la variable `neon_org_id` y la paso por `TF_VAR_neon_org_id`, para no escribir el id en el repo.
+3. **Render rechazó el owner id** (`invalid ownerID`): había usado el `usr-…` de mi usuario, y Render espera el `tea-…` del workspace. Lo saqué de *Workspace Settings*. Como Neon ya se había creado en ese apply, el siguiente plan propuso crear sólo los dos servicios: el estado recordaba lo que ya existía.
+4. Usé `region_id = "aws-us-east-1"` en Neon y `virginia` en Render, para que la base y los servicios queden en la misma zona, igual que QA y PROD.
+
+Hice el ciclo `apply` → `destroy` → `apply` → `destroy`: preprod respondió en `/health` y `/api/tareas` y el front cargó contra su api; el segundo `plan` dio «No changes»; y el destroy borró primero el front, después la api, y por último la base, el rol y el proyecto (el grafo de dependencias al revés). QA y producción siguieron intactos. Queda destruido: tiene que poder nacer en la defensa.
+
+### Uso de IA
+
+Usé Claude (chat) para entender la consigna y adaptarla a mi app (la conexión como URI para `DATABASE_URL`, el puerto 3001, la región) y para diagnosticar los errores de `org_id` y de owner id. Claude Code escribió los archivos de `infra/` y esta sección. Las llaves, los `init`, `plan`, `apply` y `destroy`, y las comprobaciones en las consolas de Neon y Render las hice yo. Lo verifiqué leyendo cada plan antes de aplicarlo (qué se crea, qué queda `known after apply`, la última línea), con los `curl` a preprod, con el segundo `plan` en «No changes» y mirando el orden del destroy.
