@@ -129,8 +129,8 @@ function NuevaTarea() {
       <h1 style={{ fontSize: 20, marginTop: 0 }}>Nueva tarea</h1>
       <form onSubmit={crear} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div>
-          <label style={labelStyle}>Título</label>
-          <input style={inputStyle} value={titulo} onChange={e => setTitulo(e.target.value)} required />
+          <label htmlFor="titulo" style={labelStyle}>Título</label>
+          <input id="titulo" style={inputStyle} value={titulo} onChange={e => setTitulo(e.target.value)} required />
         </div>
         <div>
           <label style={labelStyle}>Descripción</label>
@@ -142,15 +142,15 @@ function NuevaTarea() {
             <input type="date" style={inputStyle} value={fechaLimite} onChange={e => setFechaLimite(e.target.value)} />
           </div>
           <div style={{ flex: 1 }}>
-            <label style={labelStyle}>Prioridad</label>
-            <select style={inputStyle} value={prioridad} onChange={e => setPrioridad(e.target.value)}>
+            <label htmlFor="prioridad" style={labelStyle}>Prioridad</label>
+            <select id="prioridad" style={inputStyle} value={prioridad} onChange={e => setPrioridad(e.target.value)}>
               <option value="BAJA">Baja</option>
               <option value="MEDIA">Media</option>
               <option value="ALTA">Alta</option>
             </select>
           </div>
         </div>
-        {error && <p style={{ margin: 0, fontSize: 12, color: '#dc2626' }}>{error}</p>}
+        {error && <p role="alert" style={{ margin: 0, fontSize: 12, color: '#dc2626' }}>{error}</p>}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
           <Link to="/" style={{ fontSize: 13, padding: '8px 16px', border: '1px solid #e5e7eb', borderRadius: 8, textDecoration: 'none', color: '#374151' }}>Cancelar</Link>
           <button type="submit" style={{ fontSize: 13, padding: '8px 16px', background: '#111827', color: 'white', border: 'none', borderRadius: 8 }}>Crear tarea</button>
@@ -229,8 +229,8 @@ function DetalleTarea() {
       </div>
 
       <div style={{ marginTop: 16 }}>
-        <label style={labelStyle}>Cambiar estado</label>
-        <select style={inputStyle} value={tarea.estado} onChange={e => setTarea({ ...tarea, estado: e.target.value })}>
+        <label htmlFor="estado" style={labelStyle}>Cambiar estado</label>
+        <select id="estado" style={inputStyle} value={tarea.estado} onChange={e => setTarea({ ...tarea, estado: e.target.value })}>
           <option value="PENDIENTE">Pendiente</option>
           <option value="EN_PROGRESO">En progreso</option>
           <option value="COMPLETADA">Completada</option>
