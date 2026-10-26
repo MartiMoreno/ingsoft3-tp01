@@ -180,3 +180,37 @@ jobs:
             sleep 20
           done
           echo "❌ QA no respondió a tiempo"; exit 1
+
+  deploy-prod:
+    runs-on: ubuntu-latest
+    needs: deploy-qa                 # PROD solo después de QA vivo
+    environment: production          # acá la corrida se pausa hasta la aprobación
+    concurrency:
+      group: deploy-prod
+      cancel-in-progress: false
+    steps:
+      # &ref= despliega EL commit aprobado: entre la pausa y la aprobación, main puede moverse.
+      - name: Disparar deploy en Render (backend + front) — del commit aprobado
+        env:
+          HOOK_API: ${{ secrets.RENDER_HOOK_API_PROD }}
+          HOOK_FRONT: ${{ secrets.RENDER_HOOK_FRONT_PROD }}
+        run: |
+          curl -fsS --max-time 30 "$HOOK_API&ref=$GITHUB_SHA"
+          curl -fsS --max-time 30 "$HOOK_FRONT&ref=$GITHUB_SHA"
+
+      - name: Smoke test PROD
+        shell: bash
+        env:
+          URL_API: https://marti-tareas-api-prod.onrender.com
+          URL_FRONT: https://marti-tareas-front-prod.onrender.com
+        run: |
+          echo "Esperando a que PROD esté vivo..."
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 10 "$URL_API/health" \
+               && curl -fsS --max-time 10 "$URL_API/api/tareas" > /dev/null \
+               && curl -fsS --max-time 10 "$URL_FRONT/" > /dev/null; then
+              echo "✅ PROD responde (API + BD + front)"; exit 0
+            fi
+            sleep 20
+          done
+          echo "❌ PROD no respondió a tiempo"; exit 1
